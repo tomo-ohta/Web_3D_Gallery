@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { Demo, DemoContext, PointerInfo, ViewSize } from '../core/types';
+import { purgeScene } from '../core/purge';
 import type { EnvName } from '../core/assets';
 import { OrbitDrag } from '../core/orbit';
 import { LabelSprite } from '../core/textsprite';
@@ -53,6 +54,9 @@ export async function createStudio(ctx: DemoContext): Promise<Demo> {
   let exposureTarget = exposureCur;
 
   const demo: Demo & { exposure: number } = {
+    dispose() {
+      purgeScene(scene);
+    },
     exposure: exposureCur,
 
     update(dt, t) {

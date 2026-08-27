@@ -756,6 +756,8 @@ function boot() {
     backdrop.hidden = true;
     fsUi.hidden = true;
     history.replaceState(null, '', location.pathname + location.search);
+    // ギャラリーへ戻るときは各カードを初期状態から再構築する
+    engine.resetAllDemos();
   }
 
   function nav(dir: 1 | -1) {

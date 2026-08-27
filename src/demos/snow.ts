@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { Demo, DemoContext, PointerInfo, ViewSize } from '../core/types';
+import { purgeScene } from '../core/purge';
 import { OrbitDrag } from '../core/orbit';
 
 /** 降雪と積雪。CPU 高さ場に雪が積もり、なぞると跡がつく */
@@ -337,6 +338,7 @@ export async function createSnow(ctx: DemoContext): Promise<Demo> {
       }
     },
     dispose() {
+      purgeScene(scene);
       heightTex.dispose();
       flakeGeo.dispose();
     },

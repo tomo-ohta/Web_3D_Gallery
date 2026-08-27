@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { Reflector } from 'three/addons/objects/Reflector.js';
 import type { Demo, DemoContext, PointerInfo, ViewSize } from '../core/types';
+import { purgeScene } from '../core/purge';
 import { OrbitDrag } from '../core/orbit';
 import { LabelSprite } from '../core/textsprite';
 
@@ -302,6 +303,7 @@ export async function createWetStreet(ctx: DemoContext): Promise<Demo> {
       }
     },
     dispose() {
+      purgeScene(scene);
       street.dispose();
       rainGeo.dispose();
     },

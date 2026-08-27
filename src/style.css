@@ -60,14 +60,20 @@ body {
   outline-offset: 2px;
 }
 
-/* ---------- 共有キャンバス ---------- */
+/* ---------- 共有キャンバス ----------
+   fixed だとコンポジタスレッドのスクロールに描画が1フレーム遅れて
+   カードから泳いで見えるため、文書内 absolute に置き、
+   毎フレーム transform でビューポート位置へ追従させる。
+   （スクロール中は描画済みピクセルがカードと一緒に動く） */
 #gl {
-  position: fixed;
-  inset: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   z-index: 1;
   pointer-events: none;
+  will-change: transform;
 }
 body.fs-mode #gl { z-index: 40; }
 body.fs-mode { overflow: hidden; }

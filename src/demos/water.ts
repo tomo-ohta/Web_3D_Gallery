@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { Demo, DemoContext, PointerInfo, Quality, ViewSize } from '../core/types';
+import { purgeScene } from '../core/purge';
 import { PingPong, pass } from '../core/gpgpu';
 
 /** 高さ場の波動方程式 + 屈折・コースティクス・空反射のプール表現 */
@@ -319,6 +320,7 @@ export async function createWater(ctx: DemoContext): Promise<Demo> {
       }
     },
     dispose() {
+      purgeScene(scene);
       sim.dispose();
     },
   };

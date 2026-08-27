@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { Demo, DemoContext, PointerInfo, ViewSize } from '../core/types';
+import { purgeScene } from '../core/purge';
 import { PingPong, pass } from '../core/gpgpu';
 
 /** GPGPU ボイド（群体シミュレーション）。4,096 匹の魚群 */
@@ -302,6 +303,7 @@ export async function createBoids(ctx: DemoContext): Promise<Demo> {
       if (p.type === 'tap') scare = 1;
     },
     dispose() {
+      purgeScene(scene);
       pos.dispose();
       vel.dispose();
       fishGeo.dispose();

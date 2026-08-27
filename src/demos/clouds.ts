@@ -1,7 +1,12 @@
 import * as THREE from 'three';
 import type { Demo, DemoContext, PointerInfo, ViewSize } from '../core/types';
+import { purgeScene } from '../core/purge';
 
-/** ボリュームレイマーチングの雲海。ドラッグで太陽を動かし時刻が変わる */
+/**
+ * ボリュームレイマーチングの雲海。ドラッグで太陽を動かし時刻が変わる。
+ * レイマーチは重いので低解像度のレンダーターゲットへ描き、拡大合成する
+ * （雲は低周波なのでアップスケールがほぼ見えない）。
+ */
 
 const FRAG = /* glsl */ `
 varying vec2 vUv;
@@ -29,26 +34,33 @@ float vnoise(vec3 p) {
         mix(hash13(i + vec3(0, 1, 1)), hash13(i + vec3(1, 1, 1)), f.x), f.y),
     f.z);
 }
-float fbm(vec3 p) {
-  float a = 0.5;
-  float r = 0.0;
-  for (int i = 0; i < 4; i++) {
-    r += vnoise(p) * a;
-    p = p * 2.13 + vec3(11.3);
-    a *= 0.5;
-  }
+float fbm3(vec3 p) {
+  float r = vnoise(p) * 0.55;
+  p = p * 2.13 + vec3(11.3);
+  r += vnoise(p) * 0.28;
+  p = p * 2.09 + vec3(31.7);
+  r += vnoise(p) * 0.17;
   return r;
 }
 
 const float CLOUD_LO = 0.0;
 const float CLOUD_HI = 1.7;
 
+float heightProf(float y) {
+  return smoothstep(CLOUD_LO, CLOUD_LO + 0.5, y) * smoothstep(CLOUD_HI, CLOUD_HI - 0.8, y);
+}
+
 float density(vec3 p) {
-  float prof = smoothstep(CLOUD_LO, CLOUD_LO + 0.5, p.y) * smoothstep(CLOUD_HI, CLOUD_HI - 0.8, p.y);
-  float n = fbm(p * vec3(0.32, 0.5, 0.32) + vec3(uOffset, 0.0, uOffset * 0.6));
-  n += fbm(p * vec3(1.3, 1.8, 1.3) + vec3(uOffset * 1.8, 0.0, 0.0)) * 0.25;
-  float d = smoothstep(uCoverage, uCoverage + 0.32, n);
-  return d * prof * 0.85;
+  float n = fbm3(p * vec3(0.32, 0.5, 0.32) + vec3(uOffset, 0.0, uOffset * 0.6));
+  n += vnoise(p * vec3(1.5, 2.0, 1.5) + vec3(uOffset * 1.8, 0.0, 0.0)) * 0.14;
+  return smoothstep(uCoverage, uCoverage + 0.32, n) * heightProf(p.y) * 0.85;
+}
+
+// ライトマーチ用の軽い密度（2オクターブ）
+float densityCheap(vec3 p) {
+  vec3 q = p * vec3(0.32, 0.5, 0.32) + vec3(uOffset, 0.0, uOffset * 0.6);
+  float n = vnoise(q) * 0.62 + vnoise(q * 2.13 + vec3(11.3)) * 0.3;
+  return smoothstep(uCoverage, uCoverage + 0.32, n) * heightProf(p.y) * 0.85;
 }
 
 vec3 skyColor(vec3 d, float elev) {
@@ -86,9 +98,8 @@ void main() {
   // 雲スラブとの交差区間
   float t0 = (CLOUD_HI - ro.y) / rd.y;
   float t1 = (CLOUD_LO - ro.y) / rd.y;
-  float tEnter = min(t0, t1);
+  float tEnter = max(min(t0, t1), 0.0);
   float tExit = max(t0, t1);
-  tEnter = max(tEnter, 0.0);
 
   vec3 col = sky;
   if (tExit > 0.0 && rd.y < 0.35) {
@@ -103,23 +114,17 @@ void main() {
       float g = 0.4;
       float cosT = dot(rd, uSunDir);
       float ph = (1.0 - g * g) / max(pow(1.0 + g * g - 2.0 * g * cosT, 1.5), 1e-3) * 0.0796 + 0.18;
-      for (int i = 0; i < 96; i++) {
+      vec3 ambient = mix(vec3(0.25, 0.3, 0.42), vec3(0.5, 0.58, 0.72), smoothstep(0.05, 0.5, elev));
+      for (int i = 0; i < 72; i++) {
         if (float(i) >= uSteps || tr < 0.02) break;
         float d = density(p);
         if (d > 0.005) {
-          // ライトマーチ（4歩）
-          float lt = 0.0;
-          vec3 lp = p;
-          for (int j = 0; j < 4; j++) {
-            lp += uSunDir * 0.42;
-            lt += density(lp) * 0.42;
-          }
-          float light = exp(-lt * 2.6);
+          // ライトマーチ（3歩・軽量密度）
+          float lt = densityCheap(p + uSunDir * 0.5) + densityCheap(p + uSunDir * 1.1) + densityCheap(p + uSunDir * 1.9);
+          float light = exp(-lt * 1.45);
           float powder = 1.0 - exp(-d * 5.0);
-          vec3 ambient = mix(vec3(0.25, 0.3, 0.42), vec3(0.5, 0.58, 0.72), smoothstep(0.05, 0.5, elev));
           vec3 s = sunCol * light * ph * 2.4 + ambient * 0.35;
-          float a = d * stepLen * 1.6;
-          acc += tr * s * a * powder * 2.0;
+          acc += tr * s * (d * stepLen * 1.6) * powder * 2.0;
           tr *= exp(-d * stepLen * 2.2);
         }
         p += rd * stepLen;
@@ -135,8 +140,19 @@ void main() {
 }
 `;
 
+const DISPLAY_FRAG = /* glsl */ `
+varying vec2 vUv;
+uniform sampler2D tSrc;
+void main() { gl_FragColor = texture2D(tSrc, vUv); }
+`;
+
+const PASS_VERT = `varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`;
+
+/** レイマーチ解像度はビューポートに対するこの倍率（上限あり） */
+const RT_SCALE = 0.38;
+const RT_MAX_W = 1024;
+
 export async function createClouds(ctx: DemoContext): Promise<Demo> {
-  const scene = new THREE.Scene();
   const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 10);
 
   const uniforms = {
@@ -145,21 +161,29 @@ export async function createClouds(ctx: DemoContext): Promise<Demo> {
     uFocal: { value: 1.4 },
     uSunDir: { value: new THREE.Vector3(-0.4, 0.18, -0.9).normalize() },
     uCoverage: { value: 0.44 },
-    uSteps: { value: 44 },
+    uSteps: { value: 34 },
     uOffset: { value: 0 },
   };
-  const quad = new THREE.Mesh(
+  const rayScene = new THREE.Scene();
+  const rayQuad = new THREE.Mesh(
     new THREE.PlaneGeometry(2, 2),
-    new THREE.ShaderMaterial({
-      vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`,
-      fragmentShader: FRAG,
-      uniforms,
-      depthTest: false,
-      depthWrite: false,
-    }),
+    new THREE.ShaderMaterial({ vertexShader: PASS_VERT, fragmentShader: FRAG, uniforms, depthTest: false, depthWrite: false }),
   );
-  quad.frustumCulled = false;
-  scene.add(quad);
+  rayQuad.frustumCulled = false;
+  rayScene.add(rayQuad);
+
+  const dispUniforms = { tSrc: { value: null as THREE.Texture | null } };
+  const dispScene = new THREE.Scene();
+  const dispQuad = new THREE.Mesh(
+    new THREE.PlaneGeometry(2, 2),
+    new THREE.ShaderMaterial({ vertexShader: PASS_VERT, fragmentShader: DISPLAY_FRAG, uniforms: dispUniforms, depthTest: false, depthWrite: false }),
+  );
+  dispQuad.frustumCulled = false;
+  dispScene.add(dispQuad);
+
+  let rt: THREE.WebGLRenderTarget | null = null;
+  let rtW = 0;
+  let rtH = 0;
 
   const sunTarget = uniforms.uSunDir.value.clone();
   const coverages = [0.52, 0.44, 0.3];
@@ -173,21 +197,34 @@ export async function createClouds(ctx: DemoContext): Promise<Demo> {
       uniforms.uSunDir.value.lerp(sunTarget, Math.min(1, dt * 3)).normalize();
       uniforms.uCoverage.value += (coverages[covIndex] - uniforms.uCoverage.value) * Math.min(1, dt * 1.5);
     },
-    render() {
-      ctx.renderer.render(scene, camera);
+    render(size: ViewSize) {
+      const w = Math.min(RT_MAX_W, Math.max(160, Math.round(size.w * RT_SCALE)));
+      const h = Math.max(100, Math.round((w * size.h) / size.w));
+      if (!rt || w !== rtW || h !== rtH) {
+        rt?.dispose();
+        rt = new THREE.WebGLRenderTarget(w, h, { depthBuffer: false, stencilBuffer: false });
+        rtW = w;
+        rtH = h;
+        dispUniforms.tSrc.value = rt.texture;
+      }
+      const renderer = ctx.renderer;
+      renderer.setRenderTarget(rt);
+      renderer.render(rayScene, camera);
+      renderer.setRenderTarget(null);
+      renderer.render(dispScene, camera);
     },
     setSize(s: ViewSize) {
       uniforms.uAspect.value = s.aspect;
     },
     setQuality(q) {
-      uniforms.uSteps.value = q === 'full' ? 84 : 44;
+      uniforms.uSteps.value = q === 'full' ? 54 : 34;
     },
     pointer(p: PointerInfo) {
       if (p.type === 'zoom') {
         uniforms.uFocal.value = THREE.MathUtils.clamp(uniforms.uFocal.value * Math.exp(-(p.dz ?? 0)), 1.0, 2.6);
         return;
       }
-      if (p.type === 'move' || p.type === 'down') {
+      if (p.type === 'down' || (p.type === 'move' && p.down)) {
         const yaw = -p.x * 1.1;
         const elev = THREE.MathUtils.clamp(0.04 + p.v * 0.75, 0.03, 0.85);
         sunTarget.set(Math.sin(yaw) * 0.9, elev, -Math.cos(yaw)).normalize();
@@ -195,6 +232,11 @@ export async function createClouds(ctx: DemoContext): Promise<Demo> {
       if (p.type === 'tap') {
         covIndex = (covIndex + 1) % coverages.length;
       }
+    },
+    dispose() {
+      rt?.dispose();
+      purgeScene(rayScene);
+      purgeScene(dispScene);
     },
   };
 }

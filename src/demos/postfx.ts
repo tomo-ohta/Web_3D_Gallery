@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { Demo, DemoContext, PointerInfo, ViewSize } from '../core/types';
+import { purgeScene } from '../core/purge';
 import { OrbitDrag } from '../core/orbit';
 import { LabelSprite } from '../core/textsprite';
 import { FSQuad } from '../core/gpgpu';
@@ -43,11 +44,30 @@ void main() {
     glow += max(textureLod(tColor, uv, 5.0).rgb - 0.35, 0.0) * 1.5;
     col += glow * (0.4 + uParam * 1.6);
   } else if (uMode == 2) {
-    // 被写界深度（ミップぼかし）
+    // 被写界深度（黄金角スパイラルの収集ぼかし）
+    // ミップぼかしだと錯乱円が大きい所でブロック状に潰れるため、
+    // 錯乱円半径ぶんの円盤を実サンプリングして滑らかなボケを作る
     float focus = mix(2.5, 11.0, uParam);
-    float depth = linearDepth(uv);
-    float coc = clamp(abs(depth - focus) / (focus * 0.55), 0.0, 1.0);
-    col = textureLod(tColor, uv, coc * 5.2).rgb;
+    float centerDepth = linearDepth(uv);
+    float coc = clamp(abs(centerDepth - focus) / (focus * 0.55), 0.0, 1.0);
+    float radius = coc * 0.028;
+    float rot = hash12(uv * 913.7) * 6.2831;
+    vec3 acc = texture2D(tColor, uv).rgb;
+    float wsum = 1.0;
+    for (int i = 1; i <= 28; i++) {
+      float fi = float(i);
+      float ang = fi * 2.39996 + rot;
+      float rr = sqrt(fi / 28.0) * radius;
+      vec2 off = vec2(cos(ang) * 0.625, sin(ang)) * rr; // RT は 1024x640 なので x を補正して円形に
+      vec2 suv = clamp(uv + off, vec2(0.002), vec2(0.998));
+      float dS = linearDepth(suv);
+      float cocS = clamp(abs(dS - focus) / (focus * 0.55), 0.0, 1.0);
+      // 手前のシャープな物体が背景のボケへ滲まないよう、タップ自身の錯乱円で重み付け
+      float w = mix(0.06, 1.0, clamp(cocS * 1.4, 0.0, 1.0));
+      acc += textureLod(tColor, suv, 1.0 + coc * 1.5).rgb * w;
+      wsum += w;
+    }
+    col = acc / wsum;
   } else if (uMode == 3) {
     // 色収差 + ビネット + 粒子
     vec2 d = (uv - 0.5) * (0.006 + uParam * 0.03);
@@ -236,6 +256,7 @@ export async function createPostfx(ctx: DemoContext): Promise<Demo> {
       }
     },
     dispose() {
+      purgeScene(scene);
       rt.dispose();
     },
   };

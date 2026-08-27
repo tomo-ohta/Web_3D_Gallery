@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { Demo, DemoContext, PointerInfo, ViewSize } from '../core/types';
+import { purgeScene } from '../core/purge';
 
 /** 層状レイマーチングによるオーロラ。ポインタでカーテンが揺れる */
 
@@ -145,6 +146,9 @@ export async function createAurora(ctx: DemoContext): Promise<Demo> {
   let swayTarget = 0;
 
   return {
+    dispose() {
+      purgeScene(scene);
+    },
     exposure: 1.0,
     update(dt, t) {
       uniforms.uTime.value = t;
@@ -167,7 +171,8 @@ export async function createAurora(ctx: DemoContext): Promise<Demo> {
         uniforms.uFocal.value = THREE.MathUtils.clamp(uniforms.uFocal.value * Math.exp(-(p.dz ?? 0)), 0.9, 2.4);
         return;
       }
-      if (p.type === 'move' || p.type === 'down') {
+      // 視線とカーテンはドラッグ中のみ動かす（ホバーでは反応しない）
+      if (p.type === 'down' || (p.type === 'move' && p.down)) {
         yawTarget = p.x * 0.55;
         swayTarget = p.x * 2.2;
       }

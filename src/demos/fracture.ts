@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import type RAPIER_NS from '@dimforge/rapier3d-compat';
 import type { Demo, DemoContext, PointerInfo, ViewSize } from '../core/types';
+import { purgeScene } from '../core/purge';
 import { OrbitDrag } from '../core/orbit';
 import { loadRapier } from '../core/rapier';
 
@@ -283,6 +284,7 @@ export async function createFracture(ctx: DemoContext): Promise<Demo> {
       }
     },
     dispose() {
+      purgeScene(scene);
       world.free();
     },
   };

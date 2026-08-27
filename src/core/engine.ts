@@ -148,10 +148,46 @@ export class Engine {
           loading.textContent = 'このデモはこの環境では実行できませんでした';
         }
       }
-      // 1 件ごとに少し譲ってカクつきを抑える（非表示タブでも止まらないよう setTimeout）
-      await new Promise((r) => setTimeout(r, 32));
+      // 1 件ごとに少し譲ってカクつきを抑える。
+      // 非表示タブでは setTimeout が分単位に絞られるため、
+      // throttle されない MessageChannel で即座に次へ進める。
+      await new Promise<void>((r) => {
+        if (document.hidden) {
+          const ch = new MessageChannel();
+          ch.port1.onmessage = () => r();
+          ch.port2.postMessage(0);
+        } else {
+          setTimeout(r, 32);
+        }
+      });
     }
     this.initRunning = false;
+  }
+
+  /**
+   * すべてのデモを破棄して作り直す（全画面表示から戻ったときの初期化用）。
+   * アセットはキャッシュ済みなので再生成は軽い。作成中のものはそのまま待つ。
+   */
+  resetAllDemos() {
+    for (const slot of this.slots) {
+      if (slot.initState !== 'ready') continue;
+      try {
+        slot.demo?.dispose?.();
+      } catch (err) {
+        console.warn(`[LUMINA] demo "${slot.def.id}" の破棄でエラー:`, err);
+      }
+      slot.demo = null;
+      slot.initState = 'idle';
+      slot.lastW = 0;
+      slot.lastH = 0;
+      if (!slot.view.querySelector('.loading')) {
+        const l = document.createElement('div');
+        l.className = 'loading';
+        l.textContent = 'LOADING';
+        slot.view.appendChild(l);
+      }
+      if (slot.visible || !this.ioTrusted) this.requestInit(slot);
+    }
   }
 
   setFullscreen(slot: Slot | null) {
@@ -190,6 +226,8 @@ export class Engine {
 
   private frame(now: number) {
     this.resize();
+    // absolute 配置の canvas をビューポートへ追従させる（スクロール泳ぎ対策）
+    this.renderer.domElement.style.transform = `translate(${window.scrollX}px, ${window.scrollY}px)`;
     const dt = Math.min(Math.max((now - this.clock.last) / 1000, 0), 1 / 20);
     this.clock.last = now;
     this.clock.t += dt;

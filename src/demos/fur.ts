@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { Demo, DemoContext, PointerInfo, ViewSize } from '../core/types';
+import { purgeScene } from '../core/purge';
 import { OrbitDrag } from '../core/orbit';
 
 const VERT = /* glsl */ `
@@ -172,6 +173,9 @@ export async function createFur(ctx: DemoContext): Promise<Demo> {
   };
 
   return {
+    dispose() {
+      purgeScene(scene);
+    },
     exposure: 1.0,
     update(dt, t) {
       orbit.update(dt);

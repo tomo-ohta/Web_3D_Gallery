@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { Demo, DemoContext, PointerInfo, ViewSize } from '../core/types';
+import { purgeScene } from '../core/purge';
 import { LabelSprite } from '../core/textsprite';
 
 interface SSSPreset {
@@ -153,6 +154,9 @@ export async function createSSS(ctx: DemoContext): Promise<Demo> {
   let camZ = 5.2;
 
   return {
+    dispose() {
+      purgeScene(scene);
+    },
     exposure: 1.45,
     update(dt, t) {
       label.update(dt);

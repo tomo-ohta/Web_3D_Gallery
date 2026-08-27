@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { Demo, DemoContext, PointerInfo, ViewSize } from '../core/types';
+import { purgeScene } from '../core/purge';
 import { PingPong, pass, type FSQuad } from '../core/gpgpu';
 
 const SIZE = 384; // 384^2 = 147,456 パーティクル
@@ -341,6 +342,7 @@ export async function createParticles(ctx: DemoContext): Promise<Demo> {
       }
     },
     dispose() {
+      purgeScene(scene);
       pos.dispose();
       vel.dispose();
       geo.dispose();

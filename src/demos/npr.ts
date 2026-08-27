@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { Demo, DemoContext, PointerInfo, ViewSize } from '../core/types';
+import { purgeScene } from '../core/purge';
 import { OrbitDrag } from '../core/orbit';
 import { LabelSprite } from '../core/textsprite';
 
@@ -167,7 +168,8 @@ export async function createNPR(ctx: DemoContext): Promise<Demo> {
     });
   });
 
-  // 輪郭線（反転ハル）
+  // 輪郭線（反転ハル）。glTF 内部ノードの回転を取りこぼさないよう、
+  // 元メッシュのワールド行列を毎フレームそのままコピーして描く
   const outlineUniforms = { uWidth: { value: 0.012 }, uColor: { value: new THREE.Color(0x10131f) } };
   const outlineMat = new THREE.ShaderMaterial({
     vertexShader: OUTLINE_VERT,
@@ -175,13 +177,14 @@ export async function createNPR(ctx: DemoContext): Promise<Demo> {
     uniforms: outlineUniforms,
     side: THREE.BackSide,
   });
-  const outlineGroup = new THREE.Group();
+  const outlines: { src: THREE.Mesh; out: THREE.Mesh }[] = [];
   for (const ms of meshes) {
-    const clone = new THREE.Mesh(ms.mesh.geometry, outlineMat);
-    outlineGroup.add(clone);
+    const out = new THREE.Mesh(ms.mesh.geometry, outlineMat);
+    out.matrixAutoUpdate = false;
+    out.frustumCulled = false;
+    scene.add(out);
+    outlines.push({ src: ms.mesh, out });
   }
-  outlineGroup.position.copy(helmet.position);
-  scene.add(outlineGroup);
 
   const orbit = new OrbitDrag(camera, { theta: 0.35, phi: 1.35, radius: 3.6, autoRotate: 0.1, minRadius: 1.8, maxRadius: 7 });
   const label = new LabelSprite(camera);
@@ -191,7 +194,7 @@ export async function createNPR(ctx: DemoContext): Promise<Demo> {
     const def = STYLES[s];
     scene.background = new THREE.Color(def.bg);
     scene.environment = def.env ? envData.env : null;
-    outlineGroup.visible = def.outline;
+    for (const o of outlines) o.out.visible = def.outline;
     outlineUniforms.uColor.value.set(def.outlineColor);
     for (const ms of meshes) {
       ms.mesh.material = s === 0 ? ms.original : s === 1 ? ms.toon : s === 2 ? ms.sketch : ms.holo;
@@ -201,13 +204,17 @@ export async function createNPR(ctx: DemoContext): Promise<Demo> {
   applyStyle(style);
 
   return {
+    dispose() {
+      purgeScene(scene);
+    },
     exposure: 1.05,
     update(dt, t) {
       orbit.update(dt);
       label.update(dt);
       holoUniforms.uTime.value = t;
       helmet.rotation.y = Math.sin(t * 0.15) * 0.25;
-      outlineGroup.rotation.copy(helmet.rotation);
+      helmet.updateMatrixWorld(true);
+      for (const o of outlines) o.out.matrix.copy(o.src.matrixWorld);
     },
     render() {
       ctx.renderer.render(scene, camera);

@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { Demo, DemoContext, PointerInfo, ViewSize } from '../core/types';
+import { purgeScene } from '../core/purge';
 
 /** CPU パーティクルプールによる打ち上げ花火。水面反射つき */
 
@@ -335,6 +336,7 @@ export async function createFireworks(ctx: DemoContext): Promise<Demo> {
       }
     },
     dispose() {
+      purgeScene(scene);
       geo.dispose();
     },
   };

@@ -1,7 +1,9 @@
 import * as THREE from 'three';
 import type { Demo, DemoContext, PointerInfo, ViewSize } from '../core/types';
+import { purgeScene } from '../core/purge';
 import { OrbitDrag } from '../core/orbit';
 import { LabelSprite } from '../core/textsprite';
+import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 
 /** スケルタルアニメーション（Fox）+ 頭部ボーンのプロシージャル注視制御 */
 
@@ -27,7 +29,8 @@ export async function createSkeletal(ctx: DemoContext): Promise<Demo> {
   scene.add(new THREE.AmbientLight(0x4a4258, 0.9));
 
   const gltf = await ctx.assets.gltf('fox');
-  const fox = gltf.scene;
+  // キャッシュされた原本を汚さないよう複製する（再生成時にスケールが二重に掛かるのを防ぐ）
+  const fox = SkeletonUtils.clone(gltf.scene);
   // 正規化（Fox は約 100 単位）
   const bb = new THREE.Box3().setFromObject(fox);
   const size = bb.getSize(new THREE.Vector3());
@@ -112,6 +115,9 @@ export async function createSkeletal(ctx: DemoContext): Promise<Demo> {
   const parentQ = new THREE.Quaternion();
 
   return {
+    dispose() {
+      purgeScene(scene);
+    },
     exposure: 1.0,
     update(dt, t) {
       orbit.update(dt);

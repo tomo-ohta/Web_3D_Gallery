@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { Demo, DemoContext, PointerInfo, ViewSize } from '../core/types';
+import { purgeScene } from '../core/purge';
 import { OrbitDrag } from '../core/orbit';
 
 /** Verlet ストランドによる真珠のカーテン。指でかき分けられる */
@@ -195,6 +196,7 @@ export async function createRope(ctx: DemoContext): Promise<Demo> {
       }
     },
     dispose() {
+      purgeScene(scene);
       beadGeo.dispose();
     },
   };

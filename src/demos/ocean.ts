@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { Demo, DemoContext, PointerInfo, ViewSize } from '../core/types';
+import { purgeScene } from '../core/purge';
 import { OrbitDrag } from '../core/orbit';
 import { LabelSprite } from '../core/textsprite';
 
@@ -269,6 +270,9 @@ export async function createOcean(ctx: DemoContext): Promise<Demo> {
   let presetIndex = 1;
 
   return {
+    dispose() {
+      purgeScene(scene);
+    },
     exposure: 1.0,
     update(dt, t) {
       orbit.update(dt);

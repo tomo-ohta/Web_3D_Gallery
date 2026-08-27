@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import type { Demo, DemoContext, PointerInfo, ViewSize } from '../core/types';
+import { purgeScene } from '../core/purge';
 import { OrbitDrag } from '../core/orbit';
 
 /**
@@ -231,6 +232,9 @@ export async function createSoftbody(ctx: DemoContext): Promise<Demo> {
   };
 
   return {
+    dispose() {
+      purgeScene(scene);
+    },
     exposure: 1.0,
     update(dt, t) {
       orbit.update(dt);

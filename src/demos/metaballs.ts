@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { Demo, DemoContext, PointerInfo, ViewSize } from '../core/types';
+import { purgeScene } from '../core/purge';
 import { OrbitDrag } from '../core/orbit';
 import { LabelSprite } from '../core/textsprite';
 
@@ -160,6 +161,9 @@ export async function createMetaballs(ctx: DemoContext): Promise<Demo> {
   const MODES = ['液体金属（クローム）', '溶けた金', 'シャボン'];
 
   return {
+    dispose() {
+      purgeScene(scene);
+    },
     exposure: 1.0,
     update(dt, t) {
       orbit.update(dt);

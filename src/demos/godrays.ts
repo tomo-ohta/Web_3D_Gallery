@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { Demo, DemoContext, PointerInfo, ViewSize } from '../core/types';
+import { purgeScene } from '../core/purge';
 
 /** 仮想カメラ・窓スリット・可視判定を頂点/フラグメント両方で共有する GLSL */
 const COMMON = /* glsl */ `
@@ -279,6 +280,9 @@ export async function createGodrays(ctx: DemoContext): Promise<Demo> {
   let moodBlend = 1;
 
   return {
+    dispose() {
+      purgeScene(scene);
+    },
     exposure: 1.0,
     update(dt, t) {
       shared.uTime.value = t;

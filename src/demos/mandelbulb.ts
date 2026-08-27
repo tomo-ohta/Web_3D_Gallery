@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { Demo, DemoContext, PointerInfo, ViewSize } from '../core/types';
+import { purgeScene } from '../core/purge';
 import { OrbitDrag } from '../core/orbit';
 
 /** Mandelbulb（3Dフラクタル）のスフィアトレーシング。タップで次数が変形する */
@@ -139,6 +140,9 @@ export async function createMandelbulb(ctx: DemoContext): Promise<Demo> {
   let powerTarget = 8;
 
   return {
+    dispose() {
+      purgeScene(scene);
+    },
     exposure: 1.0,
     update(dt, t) {
       orbit.update(dt);
