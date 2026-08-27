@@ -1,0 +1,16 @@
+node_modules/
+dist/
+dist-single/
+
+# 単一ファイル版の中間生成物と成果物（tools/ から再生成できる）
+artifact-assets/
+artifact/
+
+# 縮小の入力にだけ使う原本（tools/fetch-source-assets.sh で取得）
+assets-src/
+
+# 開発時の検証用スクリーンショット置き場
+.debug/
+
+.DS_Store
+*.log

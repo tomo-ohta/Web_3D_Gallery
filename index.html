@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#07090e" />
+    <title>LUMINA</title>
+    <meta
+      name="description"
+      content="いまのブラウザで描けるリアルタイム3D表現を、30のライブデモで確かめる技術ギャラリー。"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400&family=Syne:wght@800&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap"
+    />
+  </head>
+  <body>
+    <canvas id="gl"></canvas>
+
+    <div id="stage">
+      <header id="masthead">
+        <div class="mast-inner">
+          <p class="eyebrow">Real-time 3D &nbsp;/&nbsp; WebGL2 &nbsp;/&nbsp; GLSL</p>
+          <h1 class="wordmark">LUMINA</h1>
+          <p class="lede">
+            いま、ブラウザで何がどこまで描けるのか。<br />
+            マテリアルと光から、流体・破壊・群れ・フラクタルまで——<strong>30の技法</strong>を、
+            すべてその場で動かして確かめられる技術ギャラリーです。
+          </p>
+
+          <dl class="instruments">
+            <div class="inst">
+              <dt>Demos</dt>
+              <dd id="stat-demos">30</dd>
+            </div>
+            <div class="inst">
+              <dt>Categories</dt>
+              <dd id="stat-cats">6</dd>
+            </div>
+            <div class="inst">
+              <dt>WebGL contexts</dt>
+              <dd>1</dd>
+            </div>
+            <div class="inst">
+              <dt>Frame rate</dt>
+              <dd id="stat-fps"><span class="num">--</span><span class="unit">fps</span></dd>
+            </div>
+          </dl>
+
+          <p class="mast-note">
+            すべてこのページの中でリアルタイムに描かれています。カードは<em>その場でドラッグ</em>して操作でき、
+            <em>クリックで拡大</em>すると技術解説とともに全画面で動かせます。
+          </p>
+        </div>
+        <div class="rule spectral"></div>
+      </header>
+
+      <nav id="filter-bar" aria-label="カテゴリで絞り込む"></nav>
+
+      <main id="grid" aria-label="デモ一覧"></main>
+
+      <footer id="colophon">
+        <div class="rule spectral"></div>
+        <div class="colophon-inner">
+          <section class="colo-block">
+            <h2 class="colo-label">Architecture</h2>
+            <p class="colo-text">
+              30のデモは<strong>ひとつのWebGLコンテキスト</strong>を共有しています。画面全体を覆う1枚のcanvasに対し、
+              各カードのDOM位置へビューポートとシザー矩形を合わせて順に描画する方式です。
+              画面外のカードは自動で停止し、拡大表示中のデモだけがフル解像度に切り替わります。
+            </p>
+          </section>
+
+          <section class="colo-block">
+            <h2 class="colo-label">Assets &amp; Credits</h2>
+            <ul class="credits">
+              <li><span class="credit-name">Battle Damaged Sci-fi Helmet</span><span class="credit-by">© 2018 ctxwing / CC BY 4.0 &nbsp;·&nbsp; 原作: © 2016 theblueturtle_</span></li>
+              <li><span class="credit-name">Dragon Attenuation</span><span class="credit-by">Stanford CG Lab &amp; Eric Chadwick / CC BY 4.0</span></li>
+              <li><span class="credit-name">Fox</span><span class="credit-by">PixelMannen / CC0 &nbsp;·&nbsp; rig: @tomkranis / CC BY 4.0</span></li>
+              <li><span class="credit-name">HDRI — studio_small_08 / venice_sunset / dikhololo_night</span><span class="credit-by">Poly Haven / CC0</span></li>
+              <li><span class="credit-name">Three.js</span><span class="credit-by">MIT</span></li>
+              <li><span class="credit-name">Rapier</span><span class="credit-by">Apache-2.0</span></li>
+            </ul>
+          </section>
+
+          <p class="colo-foot">
+            LUMINA — built with Vite &amp; TypeScript. モデルとHDRIはギャラリー用に再エンコードして同梱しています。
+          </p>
+        </div>
+      </footer>
+    </div>
+
+    <div id="fs-backdrop" hidden></div>
+    <div id="fs-ui" hidden>
+      <div id="fs-view"></div>
+      <aside id="fs-panel">
+        <div class="fs-head">
+          <span id="fs-category" class="cat-chip"></span>
+          <h2 id="fs-title"></h2>
+          <p id="fs-subtitle"></p>
+        </div>
+        <p id="fs-desc"></p>
+        <section class="fs-section">
+          <h3>技術要素</h3>
+          <ul id="fs-tech"></ul>
+        </section>
+        <section class="fs-section">
+          <h3>操作</h3>
+          <ul id="fs-controls"></ul>
+        </section>
+      </aside>
+      <button id="fs-close" title="閉じる (Esc)" aria-label="閉じる">✕</button>
+      <button id="fs-prev" title="前のデモ (←)" aria-label="前のデモ">‹</button>
+      <button id="fs-next" title="次のデモ (→)" aria-label="次のデモ">›</button>
+      <button id="fs-info-toggle" title="解説の表示を切り替える" aria-label="解説の表示を切り替える">i</button>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
