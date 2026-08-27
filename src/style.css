@@ -118,23 +118,22 @@ body.fs-mode { overflow: hidden; }
   opacity: 0.85;
 }
 
-/* 名前が長いので「WEB TECH / DEMO」の2行で固定する。
-   幅によって行数が変わると印象が安定しないため、改行は HTML 側で明示する */
+/* 常に1行。Syne 800 の「WEB TECH DEMO」は約 15.2em 幅なので、
+   利用可能幅（shell 幅 − 左右パディング）に対して常に 1 割ほど余裕が残るサイズにする。
+   320px〜2560px のどの幅でも折り返さず溢れない。 */
 .wordmark {
-  margin-top: 16px;
+  margin-top: 18px;
   font-family: var(--font-display);
   font-weight: 800;
-  /* 下限は vw より小さくしておく（狭い画面で「WEB TECH」が溢れないように） */
-  font-size: clamp(26px, 8.8vw, 114px);
-  line-height: 0.94;
-  letter-spacing: 0.05em;
-  text-indent: 0.05em;
+  font-size: min(5.4vw, 78px);
+  line-height: 1;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
+  white-space: nowrap;
   background: linear-gradient(96deg, #fdf3dd 4%, var(--lumen) 46%, var(--lumen-deep) 92%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  text-wrap: balance;
 }
 
 .lede {
