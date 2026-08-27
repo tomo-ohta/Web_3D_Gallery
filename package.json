@@ -1,9 +1,9 @@
 {
-  "name": "lumina",
+  "name": "web-tech-demo",
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "LUMINA — Real-time 3D expression gallery for the web",
+  "description": "Web Tech Demo — Real-time 3D expression gallery for the web",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",

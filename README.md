@@ -1,4 +1,4 @@
-# LUMINA — リアルタイム3D表現ギャラリー
+# Web Tech Demo — リアルタイム3D表現ギャラリー
 
 現在のWebブラウザ（WebGL2）で現実的に動作する、最高品質クラスのリアルタイム3D表現を
 1ページで一覧・体験できる技術デモギャラリーです。全30デモがすべてブラウザ内で
@@ -29,7 +29,7 @@ DamagedHelmet 2048px テクスチャ、Fox、量子化済みドラゴンメッ�
 npm run build:artifact
 ```
 
-`artifact/lumina.html` に、スクリプト・スタイル・モデル・HDRI をすべて埋め込んだ
+`artifact/web-tech-demo.html` に、スクリプト・スタイル・モデル・HDRI をすべて埋め込んだ
 **自己完結の1ファイル（約8.8MB）** を書き出します。外部への通信は Google Fonts だけです。
 配信版のアセットを `tools/` のスクリプトで縮小してから埋め込みます。
 
@@ -114,9 +114,10 @@ glTF の画像を `data:` URI にしているのは、`bufferView` のままだ�
 
 ## アーキテクチャ
 
-- **単一WebGLコンテキスト共有**: 固定配置のフルスクリーン canvas 1枚に対し、
-  各カードのDOM位置へ `viewport/scissor` を合わせて全デモを描画
-  （three.js "multiple elements" 方式）。WebGLコンテキスト数の上限を回避します。
+- **単一WebGLコンテキスト共有**: 全面を覆う canvas 1枚に対し、各カードのDOM位置へ
+  `viewport/scissor` を合わせて全デモを描画（three.js "multiple elements" 方式）。
+  WebGLコンテキスト数の上限を回避します。canvas は文書内 `absolute` に置き、
+  毎フレーム `transform` でビューポートへ追従させることでスクロール時のズレを防いでいます。
 - **画面外自動停止**: IntersectionObserver で見えていないカードの更新・描画をスキップ。
 - **遅延初期化**: カードが視界に近づいたものから1件ずつ順番に初期化。
   Rapier（約2MB WASM）は剛体デモ初回表示時に動的インポート。
@@ -129,7 +130,7 @@ glTF の画像を `data:` URI にしているのは、`bufferView` のままだ�
 ```
 src/
   core/    エンジン（scissor描画・ポインタルーティング・アセットキャッシュ・GPGPUヘルパー）
-  demos/   13デモ（1ファイル1デモ、Demo インターフェース実装）
+  demos/   30デモ（1ファイル1デモ、Demo インターフェース実装）
   main.ts  デモレジストリ・カードUI・全画面ビューア
 public/assets/  glTFモデル・HDRI（下記クレジット参照）
 ```

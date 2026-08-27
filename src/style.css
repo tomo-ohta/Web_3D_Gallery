@@ -1,5 +1,5 @@
 /*
-  LUMINA — 展示カタログとしてのギャラリー。
+  Web Tech Demo — 展示カタログとしてのギャラリー。
   意図的な単一ダークテーマ: 30 のデモは canvas 側で常に暗い地に描かれるため、
   ライトテーマは前提そのものを壊す。地の色は必ずトークンから明示的に塗る。
 */
@@ -118,14 +118,18 @@ body.fs-mode { overflow: hidden; }
   opacity: 0.85;
 }
 
+/* 名前が長いので「WEB TECH / DEMO」の2行で固定する。
+   幅によって行数が変わると印象が安定しないため、改行は HTML 側で明示する */
 .wordmark {
   margin-top: 16px;
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: clamp(46px, 10.5vw, 118px);
-  line-height: 0.92;
-  letter-spacing: 0.16em;
-  text-indent: 0.16em;
+  /* 下限は vw より小さくしておく（狭い画面で「WEB TECH」が溢れないように） */
+  font-size: clamp(26px, 8.8vw, 114px);
+  line-height: 0.94;
+  letter-spacing: 0.05em;
+  text-indent: 0.05em;
+  text-transform: uppercase;
   background: linear-gradient(96deg, #fdf3dd 4%, var(--lumen) 46%, var(--lumen-deep) 92%);
   -webkit-background-clip: text;
   background-clip: text;

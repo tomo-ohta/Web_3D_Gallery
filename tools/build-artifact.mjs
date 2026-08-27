@@ -15,7 +15,7 @@ execFileSync('node', [path.join(root, 'tools', 'prepare-artifact-assets.mjs')], 
 console.log('› building single-chunk bundle…');
 execFileSync('npx', ['vite', 'build'], {
   cwd: root,
-  env: { ...process.env, LUMINA_SINGLE: '1' },
+  env: { ...process.env, WTD_SINGLE: '1' },
   stdio: ['ignore', 'pipe', 'inherit'],
 });
 
@@ -57,7 +57,7 @@ const markup = bodyInner
 // インライン化するテキストの中に終了タグが現れても壊れないようにする
 const safe = (s) => s.replace(/<\/script/gi, '<\\/script');
 
-const page = `<title>LUMINA</title>
+const page = `<title>Web Tech Demo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400&family=Syne:wght@800&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap">
@@ -67,14 +67,14 @@ ${css}
 
 ${markup}
 
-<script>window.__LUMINA_ASSETS=${safe(JSON.stringify(inline))};</script>
+<script>window.__WTD_ASSETS=${safe(JSON.stringify(inline))};</script>
 <script type="module">
 ${safe(js)}
 </script>
 `;
 
 fs.mkdirSync(artifactDir, { recursive: true });
-const outPath = path.join(artifactDir, 'lumina.html');
+const outPath = path.join(artifactDir, 'web-tech-demo.html');
 fs.writeFileSync(outPath, page);
 
 const mb = (n) => (n / 1048576).toFixed(2) + 'MB';

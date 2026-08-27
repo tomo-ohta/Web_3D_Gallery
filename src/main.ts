@@ -591,7 +591,7 @@ function boot() {
   try {
     engine = new Engine(canvas);
   } catch (err) {
-    console.error('[LUMINA] WebGL2 を初期化できませんでした:', err);
+    console.error('[Web Tech Demo] WebGL2 を初期化できませんでした:', err);
     const notice = document.createElement('p');
     notice.id = 'gl-fallback';
     notice.textContent =

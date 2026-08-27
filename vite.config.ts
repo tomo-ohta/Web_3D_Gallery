@@ -27,8 +27,8 @@ function debugSave(): Plugin {
   };
 }
 
-/** LUMINA_SINGLE=1 のときは単一ファイル化のため全コードを1チャンクにまとめる */
-const single = process.env.LUMINA_SINGLE === '1';
+/** WTD_SINGLE=1 のときは単一ファイル化のため全コードを1チャンクにまとめる */
+const single = process.env.WTD_SINGLE === '1';
 
 export default defineConfig({
   base: './',

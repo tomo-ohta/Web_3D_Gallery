@@ -102,7 +102,7 @@ export class AssetCache {
   private bytes(key: AssetKey): Promise<ArrayBuffer> {
     let p = this.bytesCache.get(key);
     if (!p) {
-      const inline = (window as { __LUMINA_ASSETS?: Record<string, string> }).__LUMINA_ASSETS?.[key];
+      const inline = (window as { __WTD_ASSETS?: Record<string, string> }).__WTD_ASSETS?.[key];
       p = inline
         ? Promise.resolve(base64ToBuffer(inline))
         : fetch(`${import.meta.env.BASE_URL}${PATHS[key]}`).then((r) => {
@@ -156,7 +156,7 @@ export class AssetCache {
       this.dragonCache = this.bytes('dragon').then(decodeDragon);
     }
     return this.dragonCache.catch((err) => {
-      console.warn('[LUMINA] dragon mesh unavailable:', err);
+      console.warn('[Web Tech Demo] dragon mesh unavailable:', err);
       return null;
     });
   }

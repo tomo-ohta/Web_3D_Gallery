@@ -1,6 +1,6 @@
 // DragonAttenuation.glb からドラゴンのメッシュだけを取り出し、
 // 位置を int16、法線を int8 に量子化した独自フォーマットで書き出す。
-// （背景の布メッシュと UV は LUMINA では使わないので捨てる）
+// （背景の布メッシュと UV は Web Tech Demo では使わないので捨てる）
 //
 // フォーマット: magic "LDRG" | u32 vertCount | u32 idxCount | f32 bounds[6]
 //              | i16 positions[vc*3] | i8 normals[vc*3] | u32 indices[ic]

@@ -72,20 +72,20 @@ export class Engine {
   /** 開発時のみ: 非表示タブでも検証できる手動レンダリングフック */
   private installDebugHooks() {
     const dbg = window as unknown as {
-      __luminaSlots: Slot[];
-      __luminaEngine: Engine;
-      __luminaStep: (n?: number) => void;
-      __luminaRender: (id: string, w?: number, h?: number, frames?: number) => string;
+      __wtdSlots: Slot[];
+      __wtdEngine: Engine;
+      __wtdStep: (n?: number) => void;
+      __wtdRender: (id: string, w?: number, h?: number, frames?: number) => string;
     };
-    dbg.__luminaSlots = this.slots;
-    dbg.__luminaEngine = this;
-    dbg.__luminaStep = (n = 1) => {
+    dbg.__wtdSlots = this.slots;
+    dbg.__wtdEngine = this;
+    dbg.__wtdStep = (n = 1) => {
       for (let i = 0; i < n; i++) {
         this.clock.last += 16.7;
         this.frame(this.clock.last + 16.7);
       }
     };
-    dbg.__luminaRender = (id, w = 640, h = 400, frames = 1) => {
+    dbg.__wtdRender = (id, w = 640, h = 400, frames = 1) => {
       const slot = this.slots.find((s) => s.def.id === id);
       if (!slot?.demo) return 'not ready';
       const demo = slot.demo;
@@ -140,7 +140,7 @@ export class Engine {
         slot.initState = 'ready';
         slot.view.querySelector('.loading')?.remove();
       } catch (err) {
-        console.error(`[LUMINA] demo "${slot.def.id}" の初期化に失敗:`, err);
+        console.error(`[Web Tech Demo] demo "${slot.def.id}" の初期化に失敗:`, err);
         slot.initState = 'error';
         const loading = slot.view.querySelector('.loading');
         if (loading) {
@@ -174,7 +174,7 @@ export class Engine {
       try {
         slot.demo?.dispose?.();
       } catch (err) {
-        console.warn(`[LUMINA] demo "${slot.def.id}" の破棄でエラー:`, err);
+        console.warn(`[Web Tech Demo] demo "${slot.def.id}" の破棄でエラー:`, err);
       }
       slot.demo = null;
       slot.initState = 'idle';
